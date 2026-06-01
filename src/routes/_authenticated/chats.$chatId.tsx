@@ -179,7 +179,7 @@ function ChatPage() {
   return (
     <div className="flex h-screen flex-col">
       <header className="flex items-center gap-3 border-b border-border bg-card px-6 py-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {chat && (
             <div className="flex items-baseline gap-2">
               <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
@@ -192,6 +192,40 @@ function ChatPage() {
             <p className="truncate text-xs text-muted-foreground">{chat.description}</p>
           )}
         </div>
+        {isSubscriber && (
+          searchOpen ? (
+            <div className="flex items-center gap-1">
+              <Input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearch("");
+                    setSearchOpen(false);
+                  }
+                }}
+                placeholder="Поиск по тексту и файлам..."
+                className="h-9 w-64"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSearch("");
+                  setSearchOpen(false);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="ghost" size="icon" onClick={() => setSearchOpen(true)} title="Поиск">
+              <Search className="h-4 w-4" />
+            </Button>
+          )
+        )}
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
