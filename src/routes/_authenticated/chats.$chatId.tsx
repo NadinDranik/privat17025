@@ -5,7 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Paperclip, Send, Trash2, FileText, Image as ImgIcon, Video } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Paperclip, Send, Trash2, FileText, Image as ImgIcon, Video, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatBytes, formatTime } from "@/lib/format";
 
