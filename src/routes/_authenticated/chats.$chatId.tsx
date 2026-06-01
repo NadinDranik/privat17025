@@ -130,10 +130,11 @@ function ChatPage() {
       if (error) throw error;
 
       for (const file of pending) {
-        const path = `${chatId}/${msg.id}/${crypto.randomUUID()}-${file.name}`;
+        const ext = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase().replace(/[^a-z0-9.]/g, "") : "";
+        const path = `${chatId}/${msg.id}/${crypto.randomUUID()}${ext}`;
         const { error: upErr } = await supabase.storage
           .from("chat-attachments")
-          .upload(path, file, { contentType: file.type });
+          .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
         if (upErr) throw upErr;
         const { error: attErr } = await supabase.from("message_attachments").insert({
           message_id: msg.id,
