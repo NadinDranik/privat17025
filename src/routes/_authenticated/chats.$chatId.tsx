@@ -241,10 +241,25 @@ function ChatPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl space-y-4">
-            {messages.length === 0 && (
+            {q && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+                <span>Найдено: {filtered.length}</span>
+                <button
+                  type="button"
+                  onClick={() => { setSearch(""); setSearchOpen(false); }}
+                  className="text-primary hover:underline"
+                >
+                  Очистить
+                </button>
+              </div>
+            )}
+            {messages.length === 0 && !q && (
               <div className="text-center text-sm text-muted-foreground">Сообщений пока нет. Начните обсуждение.</div>
             )}
-            {messages.map((m) => {
+            {q && filtered.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground">Ничего не найдено</div>
+            )}
+            {filtered.map((m) => {
               const isMe = m.author_id === user?.id;
               const canDelete = isMe || isAdmin;
               return (
@@ -258,11 +273,11 @@ function ChatPage() {
                       <span>{formatTime(m.created_at)}</span>
                     </div>
                     <div className={`rounded-lg px-4 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-                      {m.body && <div className="whitespace-pre-wrap break-words text-sm">{m.body}</div>}
+                      {m.body && <div className="whitespace-pre-wrap break-words text-sm">{highlight(m.body, q)}</div>}
                       {m.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
                           {m.attachments.map((a) => (
-                            <AttachmentView key={a.id} a={a} />
+                            <AttachmentView key={a.id} a={a} query={q} />
                           ))}
                         </div>
                       )}
