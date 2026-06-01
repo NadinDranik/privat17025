@@ -46,6 +46,8 @@ function ChatPage() {
   const [body, setBody] = useState("");
   const [pending, setPending] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
