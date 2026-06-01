@@ -368,7 +368,7 @@ function highlight(text: string, query: string) {
   while (pos !== -1) {
     if (pos > cursor) parts.push(text.slice(cursor, pos));
     parts.push(
-      <mark key={i++} className="rounded bg-primary/30 px-0.5 text-foreground">
+      <mark key={i++} className="rounded bg-yellow-300 px-0.5 font-semibold text-black">
         {text.slice(pos, pos + query.length)}
       </mark>,
     );
