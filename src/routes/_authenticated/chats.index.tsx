@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/useAuth";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, Lock } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/chats")({
+export const Route = createFileRoute("/_authenticated/chats/")({
   head: () => ({ meta: [{ title: "Чаты по ГОСТ 17025" }] }),
   component: ChatsList,
 });
