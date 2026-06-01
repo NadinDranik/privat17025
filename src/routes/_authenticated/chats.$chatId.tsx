@@ -117,8 +117,18 @@ function ChatPage() {
   }, [chatId, isSubscriber, qc]);
 
   useEffect(() => {
+    if (search.trim()) return;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages]);
+  }, [messages, search]);
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? messages.filter(
+        (m) =>
+          m.body.toLowerCase().includes(q) ||
+          m.attachments.some((a) => (a.name ?? "").toLowerCase().includes(q)),
+      )
+    : messages;
 
   const send = async () => {
     if (!user) return;
