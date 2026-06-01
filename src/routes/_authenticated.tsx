@@ -67,14 +67,14 @@ function AuthedLayout() {
                   key={c.id}
                   to="/chats/$chatId"
                   params={{ chatId: c.id }}
-                  className={`flex items-start gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                  className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
                     active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
                   }`}
                 >
-                  <span className="mt-0.5 shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  <span className="shrink-0 rounded bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
                     п. {c.gost_clause}
                   </span>
-                  <span className="line-clamp-2 break-words">{c.title}</span>
+                  <span className="line-clamp-2 break-words font-medium">{c.title}</span>
                 </Link>
               );
             })}
