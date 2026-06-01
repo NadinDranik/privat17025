@@ -244,8 +244,8 @@ function ChatPage() {
               <div className="mb-2 flex flex-wrap gap-2">
                 {pending.map((f, i) => (
                   <div key={i} className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1 text-xs">
-                    <FileText className="h-3.5 w-3.5" />
-                    <span className="max-w-[180px] truncate">{f.name}</span>
+                    <FileText className="h-3.5 w-3.5 text-foreground" />
+                    <span className="max-w-[180px] truncate font-medium text-foreground">{f.name}</span>
                     <span className="text-muted-foreground">{formatBytes(f.size)}</span>
                     <button onClick={() => setPending(pending.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-3 w-3" />
@@ -314,9 +314,9 @@ function AttachmentView({ a }: { a: AttachmentRow }) {
   if (a.kind === "image") return <img src={url} alt={a.name ?? ""} className="max-h-80 rounded-md" />;
   if (a.kind === "video") return <video src={url} controls className="max-h-80 rounded-md" />;
   return (
-    <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-secondary">
-      {a.mime_type.startsWith("image") ? <ImgIcon className="h-4 w-4" /> : a.mime_type.startsWith("video") ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-      <span className="truncate">{a.name ?? "Файл"}</span>
+    <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-secondary text-foreground">
+      {a.mime_type.startsWith("image") ? <ImgIcon className="h-4 w-4 text-primary" /> : a.mime_type.startsWith("video") ? <Video className="h-4 w-4 text-primary" /> : <FileText className="h-4 w-4 text-primary" />}
+      <span className="truncate font-medium">{a.name ?? "Файл"}</span>
       <span className="ml-auto text-xs text-muted-foreground">{formatBytes(a.size_bytes)}</span>
     </a>
   );
