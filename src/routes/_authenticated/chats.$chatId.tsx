@@ -357,7 +357,29 @@ function ChatPage() {
   );
 }
 
-function AttachmentView({ a }: { a: AttachmentRow }) {
+function highlight(text: string, query: string) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return text;
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  let cursor = 0;
+  let pos = idx;
+  while (pos !== -1) {
+    if (pos > cursor) parts.push(text.slice(cursor, pos));
+    parts.push(
+      <mark key={i++} className="rounded bg-primary/30 px-0.5 text-foreground">
+        {text.slice(pos, pos + query.length)}
+      </mark>,
+    );
+    cursor = pos + query.length;
+    pos = text.toLowerCase().indexOf(query, cursor);
+  }
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
+function AttachmentView({ a, query = "" }: { a: AttachmentRow; query?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
@@ -378,7 +400,7 @@ function AttachmentView({ a }: { a: AttachmentRow }) {
   return (
     <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-secondary text-foreground">
       {a.mime_type.startsWith("image") ? <ImgIcon className="h-4 w-4 text-primary" /> : a.mime_type.startsWith("video") ? <Video className="h-4 w-4 text-primary" /> : <FileText className="h-4 w-4 text-primary" />}
-      <span className="truncate font-medium">{a.name ?? "Файл"}</span>
+      <span className="truncate font-medium">{highlight(a.name ?? "Файл", query)}</span>
       <span className="ml-auto text-xs text-muted-foreground">{formatBytes(a.size_bytes)}</span>
     </a>
   );
