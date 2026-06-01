@@ -38,8 +38,8 @@ function AuthedLayout() {
   };
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
-      <aside className="hidden flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    <div className="grid min-h-screen w-full grid-cols-[240px_1fr] sm:grid-cols-[280px_1fr]">
+      <aside className="flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
         <div className="flex items-center gap-2 border-b border-sidebar-border px-5 py-4">
           <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
             <Shield className="h-4 w-4" />
