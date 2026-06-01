@@ -1,11 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Paperclip, Send, Trash2, FileText, Image as ImgIcon, Video } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Paperclip, Send, Trash2, FileText, Image as ImgIcon, Video, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatBytes, formatTime } from "@/lib/format";
 
@@ -45,6 +46,8 @@ function ChatPage() {
   const [body, setBody] = useState("");
   const [pending, setPending] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -114,8 +117,18 @@ function ChatPage() {
   }, [chatId, isSubscriber, qc]);
 
   useEffect(() => {
+    if (search.trim()) return;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages]);
+  }, [messages, search]);
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? messages.filter(
+        (m) =>
+          m.body.toLowerCase().includes(q) ||
+          m.attachments.some((a) => (a.name ?? "").toLowerCase().includes(q)),
+      )
+    : messages;
 
   const send = async () => {
     if (!user) return;
@@ -166,7 +179,7 @@ function ChatPage() {
   return (
     <div className="flex h-screen flex-col">
       <header className="flex items-center gap-3 border-b border-border bg-card px-6 py-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {chat && (
             <div className="flex items-baseline gap-2">
               <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
@@ -179,6 +192,40 @@ function ChatPage() {
             <p className="truncate text-xs text-muted-foreground">{chat.description}</p>
           )}
         </div>
+        {isSubscriber && (
+          searchOpen ? (
+            <div className="flex items-center gap-1">
+              <Input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearch("");
+                    setSearchOpen(false);
+                  }
+                }}
+                placeholder="Поиск по тексту и файлам..."
+                className="h-9 w-64"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSearch("");
+                  setSearchOpen(false);
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="ghost" size="icon" onClick={() => setSearchOpen(true)} title="Поиск">
+              <Search className="h-4 w-4" />
+            </Button>
+          )
+        )}
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
@@ -194,10 +241,25 @@ function ChatPage() {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl space-y-4">
-            {messages.length === 0 && (
+            {q && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
+                <span>Найдено: {filtered.length}</span>
+                <button
+                  type="button"
+                  onClick={() => { setSearch(""); setSearchOpen(false); }}
+                  className="text-primary hover:underline"
+                >
+                  Очистить
+                </button>
+              </div>
+            )}
+            {messages.length === 0 && !q && (
               <div className="text-center text-sm text-muted-foreground">Сообщений пока нет. Начните обсуждение.</div>
             )}
-            {messages.map((m) => {
+            {q && filtered.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground">Ничего не найдено</div>
+            )}
+            {filtered.map((m) => {
               const isMe = m.author_id === user?.id;
               const canDelete = isMe || isAdmin;
               return (
@@ -211,11 +273,11 @@ function ChatPage() {
                       <span>{formatTime(m.created_at)}</span>
                     </div>
                     <div className={`rounded-lg px-4 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-                      {m.body && <div className="whitespace-pre-wrap break-words text-sm">{m.body}</div>}
+                      {m.body && <div className="whitespace-pre-wrap break-words text-sm">{highlight(m.body, q)}</div>}
                       {m.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
                           {m.attachments.map((a) => (
-                            <AttachmentView key={a.id} a={a} />
+                            <AttachmentView key={a.id} a={a} query={q} />
                           ))}
                         </div>
                       )}
@@ -295,7 +357,29 @@ function ChatPage() {
   );
 }
 
-function AttachmentView({ a }: { a: AttachmentRow }) {
+function highlight(text: string, query: string) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return text;
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  let cursor = 0;
+  let pos = idx;
+  while (pos !== -1) {
+    if (pos > cursor) parts.push(text.slice(cursor, pos));
+    parts.push(
+      <mark key={i++} className="rounded bg-primary/30 px-0.5 text-foreground">
+        {text.slice(pos, pos + query.length)}
+      </mark>,
+    );
+    cursor = pos + query.length;
+    pos = text.toLowerCase().indexOf(query, cursor);
+  }
+  if (cursor < text.length) parts.push(text.slice(cursor));
+  return <>{parts}</>;
+}
+
+function AttachmentView({ a, query = "" }: { a: AttachmentRow; query?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let active = true;
@@ -316,7 +400,7 @@ function AttachmentView({ a }: { a: AttachmentRow }) {
   return (
     <a href={url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-secondary text-foreground">
       {a.mime_type.startsWith("image") ? <ImgIcon className="h-4 w-4 text-primary" /> : a.mime_type.startsWith("video") ? <Video className="h-4 w-4 text-primary" /> : <FileText className="h-4 w-4 text-primary" />}
-      <span className="truncate font-medium">{a.name ?? "Файл"}</span>
+      <span className="truncate font-medium">{highlight(a.name ?? "Файл", query)}</span>
       <span className="ml-auto text-xs text-muted-foreground">{formatBytes(a.size_bytes)}</span>
     </a>
   );
