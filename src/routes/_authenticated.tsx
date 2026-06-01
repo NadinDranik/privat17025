@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
 import { Shield, LogOut, MessagesSquare, Settings } from "lucide-react";
@@ -15,6 +16,21 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const { profile, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const params = useParams({ strict: false }) as { chatId?: string };
+  const activeChatId = params.chatId;
+
+  const { data: chats } = useQuery({
+    queryKey: ["chats"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("chats")
+        .select("id, gost_clause, title")
+        .order("order_index", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -22,7 +38,7 @@ function AuthedLayout() {
   };
 
   return (
-    <div className="grid min-h-screen md:grid-cols-[260px_1fr]">
+    <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
       <aside className="hidden flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-2 border-b border-sidebar-border px-5 py-4">
           <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
@@ -30,24 +46,53 @@ function AuthedLayout() {
           </div>
           <div className="text-sm font-semibold">ГОСТ 17025</div>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
-          <Link
-            to="/chats"
-            activeProps={{ className: "bg-sidebar-accent" }}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
-          >
-            <MessagesSquare className="h-4 w-4" /> Чаты
-          </Link>
-          {isAdmin && (
+
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2">
             <Link
-              to="/admin"
-              activeProps={{ className: "bg-sidebar-accent" }}
-              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
+              to="/chats"
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground"
             >
-              <Settings className="h-4 w-4" /> Админ-панель
+              <MessagesSquare className="h-3.5 w-3.5" /> Чаты
             </Link>
+          </div>
+          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+            {chats?.length === 0 && (
+              <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Нет чатов</div>
+            )}
+            {chats?.map((c) => {
+              const active = c.id === activeChatId;
+              return (
+                <Link
+                  key={c.id}
+                  to="/chats/$chatId"
+                  params={{ chatId: c.id }}
+                  className={`flex items-start gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                    active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                  }`}
+                >
+                  <span className="mt-0.5 shrink-0 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    п. {c.gost_clause}
+                  </span>
+                  <span className="line-clamp-2 break-words">{c.title}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {isAdmin && (
+            <div className="border-t border-sidebar-border p-2">
+              <Link
+                to="/admin"
+                activeProps={{ className: "bg-sidebar-accent" }}
+                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
+              >
+                <Settings className="h-4 w-4" /> Админ-панель
+              </Link>
+            </div>
           )}
-        </nav>
+        </div>
+
         <div className="border-t border-sidebar-border p-3">
           <div className="px-2 pb-2 text-xs text-sidebar-foreground/70">
             {profile?.display_name ?? "Пользователь"}
