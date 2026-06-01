@@ -166,9 +166,6 @@ function ChatPage() {
   return (
     <div className="flex h-screen flex-col">
       <header className="flex items-center gap-3 border-b border-border bg-card px-6 py-3">
-        <Link to="/chats" className="md:hidden">
-          <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
-        </Link>
         <div className="min-w-0">
           {chat && (
             <div className="flex items-baseline gap-2">
