@@ -1,6 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Check, Shield } from "lucide-react";
+import { Check, MessageCircle, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ensureDirectChat } from "@/lib/directChat";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/subscribe")({
   head: () => ({
@@ -13,6 +16,27 @@ export const Route = createFileRoute("/subscribe")({
 });
 
 function Subscribe() {
+  const navigate = useNavigate();
+
+  const writeAdmin = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      navigate({ to: "/auth" });
+      return;
+    }
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", data.user.id)
+        .maybeSingle();
+      const id = await ensureDirectChat(data.user.id, prof?.display_name ?? null);
+      navigate({ to: "/chats/$chatId", params: { chatId: id } });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60">
@@ -59,6 +83,16 @@ function Subscribe() {
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Подключение платёжного провайдера в&nbsp;ближайшее время. До&nbsp;этого доступ выдаётся администратором вручную.
           </p>
+        </div>
+
+        <div className="mt-6 rounded-xl border border-border bg-card p-6 text-center">
+          <h2 className="font-semibold">Есть вопросы?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Напишите админу — ответим лично, без подписки.
+          </p>
+          <Button onClick={writeAdmin} variant="outline" className="mt-4">
+            <MessageCircle className="mr-2 h-4 w-4" /> Написать админу
+          </Button>
         </div>
       </section>
     </div>
