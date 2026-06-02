@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { formatBytes, formatTime } from "@/lib/format";
-import { getOrCreateDirectChatWithAdmin } from "@/lib/directChat";
+import { ensureDirectChat } from "@/lib/directChat";
 
 export const Route = createFileRoute("/_authenticated/chats/$chatId")({
   component: ChatPage,
