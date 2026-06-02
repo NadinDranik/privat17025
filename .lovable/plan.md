@@ -1,64 +1,42 @@
-## Что добавим
+## План: Ответы и пересылка сообщений в чатах
 
-**1. Аватары пользователей**
-- Новый storage bucket `avatars` (публичный, лимит 2 МБ, image/*)
-- RLS: каждый пользователь загружает/обновляет/удаляет только файлы в своей папке `{user_id}/...`; чтение публичное
-- Страница `/profile` (в `_authenticated`): отображение текущего аватара, загрузка нового файла, изменение `display_name`. Запись в `profiles.avatar_url`
-- Кнопка «Профиль» в сайдбаре (`AppSidebar`) с превью аватара
-- В чате (`chats.$chatId.tsx`) заменить кружок-инициал на компонент `Avatar` (`AvatarImage` из `profile.avatar_url` + `AvatarFallback` с инициалом). Запрос профилей уже грузит `avatar_url`
+### Изменения в БД (миграция)
 
-**2. Личные сообщения админу**
-Используем существующую инфраструктуру чатов, не создаём отдельные таблицы:
-- Расширяем таблицу `chats`: добавляем колонки `kind text default 'group'` (значения: `group` | `direct`) и `owner_id uuid null` (для direct-чатов — id обычного пользователя; собеседник всегда админ)
-- Меняем RLS на `chats`/`messages`/`message_attachments`:
-  - Для `kind='group'` — поведение как сейчас (читают все авторизованные, пишут подписчики)
-  - Для `kind='direct'` — читают/пишут только `owner_id` и админы; обычные правила подписки не применяются (личка доступна всем зарегистрированным, чтобы можно было задать вопрос до оплаты)
-- Хелпер-функция `can_access_chat(_chat_id, _user_id)` (SECURITY DEFINER) для использования в политиках `messages`/`message_attachments`
-- Кнопка «Написать админу» на странице `/subscribe` и в сайдбаре: при клике — найти/создать direct-чат текущего пользователя и перейти на него
-- В сайдбаре в списке чатов direct-чаты показываются:
-  - обычному пользователю — один пункт «Личный чат с админом»
-  - админу — отдельной секцией «Личные обращения» со списком всех direct-чатов (имя владельца) и индикатором непрочитанных можно отложить
-- В админ-панели — таб «Личные обращения» (список direct-чатов с переходом в чат)
-- Заголовок страницы чата для direct адаптируется (без «п. X»)
+Добавить колонки в `messages`:
+- `reply_to_id uuid` — ссылка на исходное сообщение для ответа
+- `forwarded_from_message_id uuid` — ссылка на оригинал пересланного сообщения
+- `forwarded_from_author_id uuid` — оригинальный автор (сохраняется даже если оригинал удалён)
+- `forwarded_from_chat_id uuid` — оригинальный чат
 
-**3. Мелочи**
-- В `useAuth` уже возвращается `profile.avatar_url` — пробрасываем в сайдбар
-- Сидер `handle_new_user` оставляем как есть (avatar_url остаётся null до первой загрузки)
+Все nullable, без жёстких FK (чтобы пересылка/цитата не ломались при удалении оригинала). RLS остаётся прежней.
 
-## Технические детали
+### Backend (frontend через supabase client)
 
-Миграция:
-```sql
-alter table public.chats
-  add column kind text not null default 'group' check (kind in ('group','direct')),
-  add column owner_id uuid null;
+Запрос сообщений расширить: подтягивать данные исходных сообщений для `reply_to_id` и `forwarded_from_message_id` (отдельный запрос по списку id), а также профили оригинальных авторов.
 
-create index on public.chats(kind, owner_id);
+### UI чата (`chats.$chatId.tsx`)
 
--- helper
-create or replace function public.can_access_chat(_chat_id uuid, _user_id uuid)
-returns boolean language sql stable security definer set search_path=public as $$
-  select exists(
-    select 1 from public.chats c
-    where c.id = _chat_id
-      and (
-        c.kind = 'group'
-        or (c.kind = 'direct' and (c.owner_id = _user_id or public.has_role(_user_id, 'admin')))
-      )
-  );
-$$;
-```
-Обновлённые политики на `messages`/`message_attachments` используют `can_access_chat` + `is_subscriber` (для group). Для `chats` SELECT: `kind='group' OR owner_id=auth.uid() OR has_role(auth.uid(),'admin')`. INSERT для direct разрешён авторизованному при `owner_id=auth.uid()`.
+**Ответ:**
+- Кнопка «Ответить» рядом с «Удалить» под каждым сообщением
+- При нажатии — над полем ввода появляется блок цитаты (имя автора + превью текста, крестик для отмены)
+- При отправке `reply_to_id` сохраняется
+- В сообщении сверху над телом рендерится блок-цитата (стиль Telegram: левая вертикальная цветная полоса + имя автора жирным + одна строка текста). Клик прокручивает к оригиналу с подсветкой.
 
-Bucket avatars:
-```sql
-insert into storage.buckets (id,name,public) values ('avatars','avatars',true);
--- policies: public read; insert/update/delete where (storage.foldername(name))[1] = auth.uid()::text
-```
+**Пересылка:**
+- Кнопка «Переслать» под сообщением
+- Открывает диалог (`Dialog` из shadcn) со списком доступных чатов: все групповые чаты + личный чат с админом (если он есть, иначе создать через `getOrCreateDirectChat`)
+- Выбор одного чата → создаётся новое сообщение в целевом чате с тем же body, `forwarded_from_*` полями и копиями записей `message_attachments` (те же `storage_path` — файлы переиспользуются, без дублирования в storage)
+- Toast с подтверждением и ссылкой на целевой чат
+- В сообщении сверху рендерится плашка «Переслано от <имя> [из <чата>]»
 
-## Что вне scope (можно потом)
-- Бейджи непрочитанных сообщений
-- Удаление/обрезка аватара (crop)
-- Уведомления админу о новом обращении
+### Технические детали
 
-Подтвердите — реализую.
+- Список чатов для пересылки: `chats` где `kind='group'` + direct-чат текущего пользователя
+- Копирование вложений: один INSERT по `message_attachments` с массивом строк после создания нового message; `storage_path` остаётся прежним (RLS на чтение проверяет доступ к чату через message → chat)
+- Прокрутка к оригиналу: `document.getElementById(`msg-${id}`)?.scrollIntoView`, плюс временный класс подсветки на 1.5с
+- Поиск остаётся работающим (body не меняется)
+
+### Файлы
+
+- Новая миграция: добавить 4 колонки в `messages`
+- `src/routes/_authenticated/chats.$chatId.tsx` — UI ответов, пересылки, рендер цитат/плашек, диалог выбора чата

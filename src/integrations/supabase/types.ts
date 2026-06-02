@@ -99,7 +99,11 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           edited_at: string | null
+          forwarded_from_author_id: string | null
+          forwarded_from_chat_id: string | null
+          forwarded_from_message_id: string | null
           id: string
+          reply_to_id: string | null
         }
         Insert: {
           author_id: string
@@ -108,7 +112,11 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
+          forwarded_from_author_id?: string | null
+          forwarded_from_chat_id?: string | null
+          forwarded_from_message_id?: string | null
           id?: string
+          reply_to_id?: string | null
         }
         Update: {
           author_id?: string
@@ -117,7 +125,11 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
+          forwarded_from_author_id?: string | null
+          forwarded_from_chat_id?: string | null
+          forwarded_from_message_id?: string | null
           id?: string
+          reply_to_id?: string | null
         }
         Relationships: [
           {
