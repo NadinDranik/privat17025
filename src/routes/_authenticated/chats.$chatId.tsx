@@ -311,7 +311,7 @@ function ChatPage() {
         )}
       </div>
 
-      {isSubscriber && (
+      {canAccess && (
         <div className="border-t border-border bg-card px-6 py-3">
           <div className="mx-auto max-w-3xl">
             {pending.length > 0 && (
