@@ -141,6 +141,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string
+          chat_id: string
+          created_at: string
+          id: string
+          message_id: string
+          read_at: string | null
+          source_message_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          chat_id: string
+          created_at?: string
+          id?: string
+          message_id: string
+          read_at?: string | null
+          source_message_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          chat_id?: string
+          created_at?: string
+          id?: string
+          message_id?: string
+          read_at?: string | null
+          source_message_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
