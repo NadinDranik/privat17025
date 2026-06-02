@@ -118,7 +118,7 @@ function ChatPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId, isSubscriber, qc]);
+  }, [chatId, canAccess, qc]);
 
   useEffect(() => {
     if (search.trim()) return;
