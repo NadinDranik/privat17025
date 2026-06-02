@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubscribeRouteImport } from './routes/subscribe'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OfferRouteImport } from './routes/offer'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,6 +23,16 @@ import { Route as AuthenticatedChatsChatIdRouteImport } from './routes/_authenti
 const SubscribeRoute = SubscribeRouteImport.update({
   id: '/subscribe',
   path: '/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OfferRoute = OfferRouteImport.update({
+  id: '/offer',
+  path: '/offer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -62,6 +74,8 @@ const AuthenticatedChatsChatIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/offer': typeof OfferRoute
+  '/privacy': typeof PrivacyRoute
   '/subscribe': typeof SubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -71,6 +85,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/offer': typeof OfferRoute
+  '/privacy': typeof PrivacyRoute
   '/subscribe': typeof SubscribeRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -82,6 +98,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/offer': typeof OfferRoute
+  '/privacy': typeof PrivacyRoute
   '/subscribe': typeof SubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -93,6 +111,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/offer'
+    | '/privacy'
     | '/subscribe'
     | '/admin'
     | '/profile'
@@ -102,6 +122,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/offer'
+    | '/privacy'
     | '/subscribe'
     | '/admin'
     | '/profile'
@@ -112,6 +134,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/offer'
+    | '/privacy'
     | '/subscribe'
     | '/_authenticated/admin'
     | '/_authenticated/profile'
@@ -123,6 +147,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  OfferRoute: typeof OfferRoute
+  PrivacyRoute: typeof PrivacyRoute
   SubscribeRoute: typeof SubscribeRoute
 }
 
@@ -133,6 +159,20 @@ declare module '@tanstack/react-router' {
       path: '/subscribe'
       fullPath: '/subscribe'
       preLoaderRoute: typeof SubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offer': {
+      id: '/offer'
+      path: '/offer'
+      fullPath: '/offer'
+      preLoaderRoute: typeof OfferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -209,6 +249,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  OfferRoute: OfferRoute,
+  PrivacyRoute: PrivacyRoute,
   SubscribeRoute: SubscribeRoute,
 }
 export const routeTree = rootRouteImport
