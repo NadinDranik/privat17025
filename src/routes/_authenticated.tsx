@@ -96,7 +96,8 @@ function AuthedLayout() {
           <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
             <Shield className="h-4 w-4" />
           </div>
-          <div className="text-sm font-semibold">ГОСТ 17025</div>
+          <div className="flex-1 text-sm font-semibold">ГОСТ 17025</div>
+          <Notifications />
         </div>
 
         <div className="flex flex-1 flex-col overflow-hidden">
