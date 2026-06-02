@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.create_message_notifications() FROM PUBLIC, anon, authenticated;
