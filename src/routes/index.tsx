@@ -128,9 +128,11 @@ function Landing() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted-foreground md:flex-row">
           <div>© ГОСТ 17025 Чаты. Экспертные консультации.</div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Link to="/auth" className="hover:text-foreground">Войти</Link>
             <Link to="/subscribe" className="hover:text-foreground">Подписка</Link>
+            <Link to="/privacy" className="hover:text-foreground">Политика конфиденциальности</Link>
+            <Link to="/offer" className="hover:text-foreground">Оферта</Link>
           </div>
         </div>
       </footer>
