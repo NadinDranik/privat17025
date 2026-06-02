@@ -285,7 +285,7 @@ function ChatPage() {
                       <span>{formatTime(m.created_at)}</span>
                     </div>
                     <div className={`rounded-lg px-4 py-2 ${isMe ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-                      {m.body && <div className="whitespace-pre-wrap break-words text-sm">{highlight(m.body, q)}</div>}
+                      {m.body && <div className="whitespace-pre-wrap break-words font-medium text-base">{highlight(m.body, q)}</div>}
                       {m.attachments.length > 0 && (
                         <div className="mt-2 space-y-2">
                           {m.attachments.map((a) => (
