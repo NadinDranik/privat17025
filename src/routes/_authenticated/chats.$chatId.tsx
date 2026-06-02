@@ -62,9 +62,12 @@ function ChatPage() {
     },
   });
 
+  const isDirect = chat?.kind === "direct";
+  const canAccess = isDirect ? !!user : isSubscriber;
+
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", chatId],
-    enabled: isSubscriber,
+    enabled: canAccess,
     queryFn: async () => {
       const { data: msgs, error } = await supabase
         .from("messages")
