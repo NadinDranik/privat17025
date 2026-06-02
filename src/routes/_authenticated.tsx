@@ -107,7 +107,7 @@ function AuthedLayout() {
               <MessagesSquare className="h-3.5 w-3.5" /> Чаты
             </Link>
           </div>
-          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2 bg-emerald-600">
             {groupChats?.length === 0 && (
               <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Нет чатов</div>
             )}
