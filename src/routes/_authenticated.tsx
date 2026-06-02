@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ensureDirectChat } from "@/lib/directChat";
 import { toast } from "sonner";
+import { Notifications } from "@/components/Notifications";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
