@@ -199,6 +199,19 @@ function ChatPage() {
 
   useEffect(() => {
     if (search.trim()) return;
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (hash.startsWith("#msg-") && messages.length > 0) {
+      const id = hash.slice(5);
+      setTimeout(() => {
+        const el = document.getElementById(`msg-${id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          setHighlightId(id);
+          setTimeout(() => setHighlightId((cur) => (cur === id ? null : cur)), 1600);
+        }
+      }, 50);
+      return;
+    }
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, search]);
 
