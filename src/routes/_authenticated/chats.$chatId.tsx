@@ -186,17 +186,19 @@ function ChatPage() {
         <div className="min-w-0 flex-1">
           {chat && (
             <div className="flex items-baseline gap-2">
-              <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
-                п. {chat.gost_clause}
-              </span>
-              <h1 className="truncate font-semibold">{chat.title}</h1>
+              {!isDirect && (
+                <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
+                  п. {chat.gost_clause}
+                </span>
+              )}
+              <h1 className="truncate font-semibold">{isDirect ? "Чат с админом" : chat.title}</h1>
             </div>
           )}
-          {chat?.description && (
+          {chat?.description && !isDirect && (
             <p className="truncate text-xs text-muted-foreground">{chat.description}</p>
           )}
         </div>
-        {isSubscriber && (
+        {canAccess && (
           searchOpen ? (
             <div className="flex items-center gap-1">
               <Input
