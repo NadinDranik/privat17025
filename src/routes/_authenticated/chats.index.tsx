@@ -16,11 +16,12 @@ function ChatsIndex() {
   const navigate = useNavigate();
 
   const { data: chats } = useQuery({
-    queryKey: ["chats"],
+    queryKey: ["chats", "group"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("chats")
         .select("id, gost_clause, title")
+        .eq("kind", "group")
         .order("order_index", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;

@@ -20,7 +20,9 @@ export type Database = {
           description: string | null
           gost_clause: string
           id: string
+          kind: string
           order_index: number
+          owner_id: string | null
           title: string
           updated_at: string
         }
@@ -29,7 +31,9 @@ export type Database = {
           description?: string | null
           gost_clause: string
           id?: string
+          kind?: string
           order_index?: number
+          owner_id?: string | null
           title: string
           updated_at?: string
         }
@@ -38,7 +42,9 @@ export type Database = {
           description?: string | null
           gost_clause?: string
           id?: string
+          kind?: string
           order_index?: number
+          owner_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -179,6 +185,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_chat: {
+        Args: { _chat_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

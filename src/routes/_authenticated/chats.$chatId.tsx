@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Paperclip, Send, Trash2, FileText, Image as ImgIcon, Video, Search, X } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { formatBytes, formatTime } from "@/lib/format";
 
@@ -61,9 +62,12 @@ function ChatPage() {
     },
   });
 
+  const isDirect = chat?.kind === "direct";
+  const canAccess = isDirect ? !!user : isSubscriber;
+
   const { data: messages = [] } = useQuery({
     queryKey: ["messages", chatId],
-    enabled: isSubscriber,
+    enabled: canAccess,
     queryFn: async () => {
       const { data: msgs, error } = await supabase
         .from("messages")
@@ -97,7 +101,7 @@ function ChatPage() {
   });
 
   useEffect(() => {
-    if (!isSubscriber) return;
+    if (!canAccess) return;
     const channel = supabase
       .channel(`chat-${chatId}`)
       .on(
@@ -114,7 +118,7 @@ function ChatPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId, isSubscriber, qc]);
+  }, [chatId, canAccess, qc]);
 
   useEffect(() => {
     if (search.trim()) return;
@@ -182,17 +186,19 @@ function ChatPage() {
         <div className="min-w-0 flex-1">
           {chat && (
             <div className="flex items-baseline gap-2">
-              <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
-                п. {chat.gost_clause}
-              </span>
-              <h1 className="truncate font-semibold">{chat.title}</h1>
+              {!isDirect && (
+                <span className="rounded bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
+                  п. {chat.gost_clause}
+                </span>
+              )}
+              <h1 className="truncate font-semibold">{isDirect ? "Чат с админом" : chat.title}</h1>
             </div>
           )}
-          {chat?.description && (
+          {chat?.description && !isDirect && (
             <p className="truncate text-xs text-muted-foreground">{chat.description}</p>
           )}
         </div>
-        {isSubscriber && (
+        {canAccess && (
           searchOpen ? (
             <div className="flex items-center gap-1">
               <Input
@@ -229,7 +235,7 @@ function ChatPage() {
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
-        {!isSubscriber ? (
+        {!canAccess ? (
           <div className="mx-auto max-w-md rounded-lg border border-border bg-card p-6 text-center">
             <h2 className="font-semibold">Доступ только подписчикам</h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -254,7 +260,9 @@ function ChatPage() {
               </div>
             )}
             {messages.length === 0 && !q && (
-              <div className="text-center text-sm text-muted-foreground">Сообщений пока нет. Начните обсуждение.</div>
+              <div className="text-center text-sm text-muted-foreground">
+                {isDirect ? "Напишите ваш вопрос — админ ответит здесь." : "Сообщений пока нет. Начните обсуждение."}
+              </div>
             )}
             {q && filtered.length === 0 && (
               <div className="text-center text-sm text-muted-foreground">Ничего не найдено</div>
@@ -262,11 +270,15 @@ function ChatPage() {
             {filtered.map((m) => {
               const isMe = m.author_id === user?.id;
               const canDelete = isMe || isAdmin;
+              const authorName = m.author?.display_name ?? "—";
               return (
                 <div key={m.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
-                    {(m.author?.display_name ?? "?").slice(0, 1).toUpperCase()}
-                  </div>
+                  <Avatar className="h-8 w-8 shrink-0">
+                    {m.author?.avatar_url && <AvatarImage src={m.author.avatar_url} alt={authorName} />}
+                    <AvatarFallback className="text-xs font-semibold">
+                      {authorName.slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className={`max-w-[80%] ${isMe ? "items-end" : "items-start"} flex flex-col gap-1`}>
                     <div className="flex items-baseline gap-2 text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">{m.author?.display_name ?? "—"}</span>
@@ -299,7 +311,7 @@ function ChatPage() {
         )}
       </div>
 
-      {isSubscriber && (
+      {canAccess && (
         <div className="border-t border-border bg-card px-6 py-3">
           <div className="mx-auto max-w-3xl">
             {pending.length > 0 && (
