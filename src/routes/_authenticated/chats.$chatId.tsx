@@ -620,7 +620,7 @@ function ForwardDialog({
     if (!user) return;
     setBusy(true);
     try {
-      const id = await getOrCreateDirectChatWithAdmin(user.id);
+      const id = await ensureDirectChat(user.id, null);
       await forwardTo(id);
     } catch (e: unknown) {
       toast.error("Не удалось открыть чат с админом", { description: (e as Error).message });
