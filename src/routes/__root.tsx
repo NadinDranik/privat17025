@@ -90,6 +90,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Экспертные чаты по ГОСТ ISO/IEC 17025-2019. Консультации по аккредитации лабораторий.",
       },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "ГОСТ 17025 · Чаты экспертных консультаций" },
+      { name: "description", content: "Accreditation Chat Hub: A platform for expert discussions on GOST ISO/IEC 17025-2019 standards." },
+      { property: "og:description", content: "Accreditation Chat Hub: A platform for expert discussions on GOST ISO/IEC 17025-2019 standards." },
+      { name: "twitter:description", content: "Accreditation Chat Hub: A platform for expert discussions on GOST ISO/IEC 17025-2019 standards." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/INefzjolT5WOPZyqHWED6vzXgc33/social-images/social-1780397356246-Сайт.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/INefzjolT5WOPZyqHWED6vzXgc33/social-images/social-1780397356246-Сайт.webp" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
