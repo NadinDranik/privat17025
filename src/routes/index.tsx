@@ -93,18 +93,32 @@ function Landing() {
             },
             {
               icon: BookOpen,
-              title: "Материалы и шаблоны",
-              text: "Документы СМ(К), чек-листы аудита, типовые ошибки. Прикрепляются прямо в чат: фото, видео, файлы.",
+              title: "Материалы и шаблоны, которые вам будут доступны",
+              text: (
+                <span className="block whitespace-pre-line text-left">
+                  — разборы требований ГОСТ ISO/IEC 17025-2019{"\n"}
+                  — пояснения по критериям аккредитации и документам Росаккредитации{"\n"}
+                  — шаблоны процедур, форм, журналов, приказов и чек-листов{"\n"}
+                  — примеры корректирующих действий и ответов на несоответствия{"\n"}
+                  — материалы по ВЛК, МСИ, ПК, персоналу, оборудованию и протоколам{"\n"}
+                  — практические кейсы лабораторий и ответы на вопросы участников
+                </span>
+              ),
             },
             {
               icon: Shield,
               title: "Эксперт всегда рядом",
-              text: "Администратор канала — профессионал с практическим опытом более 15 лет. Отвечает на вопросы, делится опытом проверок.",
+              text: (
+                <span className="block whitespace-pre-line text-left">
+                  Возник вопрос по требованиям ГОСТ ISO/IEC 17025-2019, критериям аккредитации или замечанию эксперта?{"\n\n"}
+                  В чате можно задать вопрос, получить профессиональное мнение, обсудить сложную ситуацию и найти решение на основе требований стандарта, нормативных документов и практики аккредитованных лабораторий.
+                </span>
+              ),
             },
           ].map((f) => (
-            <div key={typeof f.title === 'string' ? f.title : 'feature'} className="rounded-lg border border-border bg-card p-6">
-              <f.icon className="h-6 w-6 text-accent" />
-              <h3 className="mt-4 text-lg font-semibold">{f.title}</h3>
+            <div key={typeof f.title === 'string' ? f.title : 'feature'} className="rounded-lg border border-border bg-card p-6 border-neutral-100">
+              <f.icon className="mx-auto h-6 w-6 text-accent" />
+              <h3 className="mt-4 text-lg font-semibold text-center">{f.title}</h3>
               <div className="mt-2 text-sm leading-relaxed text-muted-foreground text-slate-800">{f.text}</div>
             </div>
           ))}
