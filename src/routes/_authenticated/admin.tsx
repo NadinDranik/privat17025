@@ -32,7 +32,7 @@ function Admin() {
   const { data: chats } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
-      const { data } = await supabase.from("chats").select("*").order("order_index");
+      const { data } = await supabase.from("chats").select("*").eq("kind", "group").order("order_index");
       return data ?? [];
     },
   });
