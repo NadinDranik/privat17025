@@ -36,7 +36,7 @@ function Subscribe() {
 
         <div className="mt-10 rounded-xl border border-border bg-card p-8">
           <div className="flex items-baseline gap-2">
-            <div className="text-4xl font-bold">2&nbsp;900&nbsp;₽</div>
+            <div className="text-4xl font-bold">1&nbsp;000&nbsp;₽</div>
             <div className="text-muted-foreground">/ месяц</div>
           </div>
           <ul className="mt-6 space-y-3 text-sm">
