@@ -101,7 +101,7 @@ function ChatPage() {
   });
 
   useEffect(() => {
-    if (!isSubscriber) return;
+    if (!canAccess) return;
     const channel = supabase
       .channel(`chat-${chatId}`)
       .on(
