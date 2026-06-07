@@ -1,15 +1,18 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/useAuth";
-import { Shield, LogOut, MessagesSquare, Settings, UserCircle, MessageCircle, Inbox } from "lucide-react";
+import { Shield, LogOut, MessagesSquare, Settings, UserCircle, MessageCircle, Inbox, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ensureDirectChat } from "@/lib/directChat";
 import { toast } from "sonner";
 import { Notifications } from "@/components/Notifications";
 
 export const Route = createFileRoute("/_authenticated")({
+  ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
@@ -22,6 +25,7 @@ function AuthedLayout() {
   const navigate = useNavigate();
   const params = useParams({ strict: false }) as { chatId?: string };
   const activeChatId = params.chatId;
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const { data: groupChats } = useQuery({
     queryKey: ["chats", "group"],
@@ -72,10 +76,13 @@ function AuthedLayout() {
     },
   });
 
+  const closeMobile = () => setMobileOpen(false);
+
   const openDirect = async () => {
     if (!user) return;
     try {
       const id = await ensureDirectChat(user.id, profile?.display_name ?? null);
+      closeMobile();
       navigate({ to: "/chats/$chatId", params: { chatId: id } });
     } catch (e) {
       toast.error((e as Error).message);
@@ -84,149 +91,184 @@ function AuthedLayout() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    closeMobile();
     navigate({ to: "/" });
   };
 
   const initial = (profile?.display_name ?? user?.email ?? "?").slice(0, 1).toUpperCase();
 
-  return (
-    <div className="grid min-h-screen w-full grid-cols-[240px_1fr] sm:grid-cols-[280px_1fr]">
-      <aside className="flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-        <div className="flex items-center gap-2 border-b border-sidebar-border px-5 py-4">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-            <Shield className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">ГОСТ 17025</div>
-          <Notifications />
+  const SidebarBody = (
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      <div className="flex items-center gap-2 border-b border-sidebar-border px-5 py-4">
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+          <Shield className="h-4 w-4" />
         </div>
+        <div className="flex-1 text-sm font-semibold">ГОСТ 17025</div>
+        <Notifications />
+      </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <Link
-              to="/chats"
-              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground"
-            >
-              <MessagesSquare className="h-3.5 w-3.5" /> Чаты
-            </Link>
-          </div>
-          <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2 bg-slate-800">
-            {groupChats?.length === 0 && (
-              <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Нет чатов</div>
-            )}
-            {groupChats?.map((c) => {
-              const active = c.id === activeChatId;
-              return (
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <Link
+            to="/chats"
+            onClick={closeMobile}
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 hover:text-sidebar-foreground"
+          >
+            <MessagesSquare className="h-3.5 w-3.5" /> Чаты
+          </Link>
+        </div>
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2 bg-slate-800">
+          {groupChats?.length === 0 && (
+            <div className="px-3 py-2 text-xs text-sidebar-foreground/60">Нет чатов</div>
+          )}
+          {groupChats?.map((c) => {
+            const active = c.id === activeChatId;
+            return (
+              <Link
+                key={c.id}
+                to="/chats/$chatId"
+                params={{ chatId: c.id }}
+                onClick={closeMobile}
+                className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
+                  active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                }`}
+              >
+                <span className="shrink-0 rounded bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
+                  п. {c.gost_clause}
+                </span>
+                <span className="line-clamp-2 break-words font-medium">{c.title}</span>
+              </Link>
+            );
+          })}
+
+          {!isAdmin && (
+            <>
+              <div className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">
+                Личное
+              </div>
+              {myDirect ? (
                 <Link
-                  key={c.id}
                   to="/chats/$chatId"
-                  params={{ chatId: c.id }}
+                  params={{ chatId: myDirect.id }}
+                  onClick={closeMobile}
                   className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
-                    active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
+                    myDirect.id === activeChatId
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "hover:bg-sidebar-accent/50"
                   }`}
                 >
-                  <span className="shrink-0 rounded bg-primary px-2 py-0.5 text-[11px] font-bold text-primary-foreground">
-                    п. {c.gost_clause}
-                  </span>
-                  <span className="line-clamp-2 break-words font-medium">{c.title}</span>
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">Чат с админом</span>
                 </Link>
-              );
-            })}
+              ) : (
+                <button
+                  type="button"
+                  onClick={openDirect}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-sm hover:bg-sidebar-accent/50"
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">Написать админу</span>
+                </button>
+              )}
+            </>
+          )}
 
-            {!isAdmin && (
-              <>
-                <div className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">
-                  Личное
-                </div>
-                {myDirect ? (
+          {isAdmin && adminDirects && adminDirects.length > 0 && (
+            <>
+              <div className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 flex items-center gap-1">
+                <Inbox className="h-3 w-3" /> Личные обращения
+              </div>
+              {adminDirects.map((c) => {
+                const active = c.id === activeChatId;
+                const nm = c.profile?.display_name ?? "Пользователь";
+                return (
                   <Link
+                    key={c.id}
                     to="/chats/$chatId"
-                    params={{ chatId: myDirect.id }}
-                    className={`flex items-center gap-2 rounded-md px-3 py-2.5 text-sm transition-colors ${
-                      myDirect.id === activeChatId
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "hover:bg-sidebar-accent/50"
+                    params={{ chatId: c.id }}
+                    onClick={closeMobile}
+                    className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
+                      active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
                     }`}
                   >
-                    <MessageCircle className="h-4 w-4 shrink-0" />
-                    <span className="font-medium">Чат с админом</span>
+                    <Avatar className="h-6 w-6 shrink-0">
+                      {c.profile?.avatar_url && <AvatarImage src={c.profile.avatar_url} />}
+                      <AvatarFallback className="text-[10px]">{nm.slice(0, 1).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate font-medium">{nm}</span>
                   </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={openDirect}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-sm hover:bg-sidebar-accent/50"
-                  >
-                    <MessageCircle className="h-4 w-4 shrink-0" />
-                    <span className="font-medium">Написать админу</span>
-                  </button>
-                )}
-              </>
-            )}
-
-            {isAdmin && adminDirects && adminDirects.length > 0 && (
-              <>
-                <div className="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70 flex items-center gap-1">
-                  <Inbox className="h-3 w-3" /> Личные обращения
-                </div>
-                {adminDirects.map((c) => {
-                  const active = c.id === activeChatId;
-                  const nm = c.profile?.display_name ?? "Пользователь";
-                  return (
-                    <Link
-                      key={c.id}
-                      to="/chats/$chatId"
-                      params={{ chatId: c.id }}
-                      className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors ${
-                        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
-                      }`}
-                    >
-                      <Avatar className="h-6 w-6 shrink-0">
-                        {c.profile?.avatar_url && <AvatarImage src={c.profile.avatar_url} />}
-                        <AvatarFallback className="text-[10px]">{nm.slice(0, 1).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <span className="truncate font-medium">{nm}</span>
-                    </Link>
-                  );
-                })}
-              </>
-            )}
-          </nav>
-
-          {isAdmin && (
-            <div className="border-t border-sidebar-border p-2">
-              <Link
-                to="/admin"
-                activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
-              >
-                <Settings className="h-4 w-4" /> Админ-панель
-              </Link>
-            </div>
+                );
+              })}
+            </>
           )}
-        </div>
+        </nav>
 
-        <div className="border-t border-sidebar-border p-3">
-          <Link
-            to="/profile"
-            activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
-            className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent"
-          >
-            <Avatar className="h-8 w-8">
-              {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
-              <AvatarFallback className="text-xs">{initial}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1 text-left">
-              <div className="truncate text-sm font-medium">{profile?.display_name ?? "Профиль"}</div>
-              <div className="text-xs text-sidebar-foreground/60 flex items-center gap-1">
-                <UserCircle className="h-3 w-3" /> Открыть
-              </div>
+        {isAdmin && (
+          <div className="border-t border-sidebar-border p-2">
+            <Link
+              to="/admin"
+              onClick={closeMobile}
+              activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+              className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent"
+            >
+              <Settings className="h-4 w-4" /> Админ-панель
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-sidebar-border p-3">
+        <Link
+          to="/profile"
+          onClick={closeMobile}
+          activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
+          className="mb-2 flex items-center gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent"
+        >
+          <Avatar className="h-8 w-8">
+            {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
+            <AvatarFallback className="text-xs">{initial}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1 text-left">
+            <div className="truncate text-sm font-medium">{profile?.display_name ?? "Профиль"}</div>
+            <div className="text-xs text-sidebar-foreground/60 flex items-center gap-1">
+              <UserCircle className="h-3 w-3" /> Открыть
             </div>
-          </Link>
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> Выйти
-          </Button>
+          </div>
+        </Link>
+        <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent" onClick={signOut}>
+          <LogOut className="h-4 w-4" /> Выйти
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen w-full md:grid md:grid-cols-[280px_1fr]">
+      {/* Mobile topbar */}
+      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-border bg-sidebar px-3 py-2 text-sidebar-foreground md:hidden">
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Меню</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] border-r-0 bg-sidebar p-0 text-sidebar-foreground">
+            {SidebarBody}
+          </SheetContent>
+        </Sheet>
+        <div className="grid h-7 w-7 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+          <Shield className="h-3.5 w-3.5" />
         </div>
+        <div className="flex-1 text-sm font-semibold">ГОСТ 17025</div>
+        <Notifications />
+      </header>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden border-r border-sidebar-border md:flex md:flex-col">
+        {SidebarBody}
       </aside>
+
       <main className="min-h-screen bg-background">
         <Outlet />
       </main>
