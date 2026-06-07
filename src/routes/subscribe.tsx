@@ -88,9 +88,9 @@ function Subscribe() {
         <div className="mt-6 rounded-xl border border-border bg-card p-6 text-center">
           <h2 className="font-semibold">Есть вопросы?</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Напишите админу — ответим лично, без подписки.
+            Для подключения подписки напишите админу
           </p>
-          <Button onClick={writeAdmin} variant="outline" className="mt-4">
+          <Button onClick={writeAdmin} variant="outline" className="mt-4 bg-orange-400">
             <MessageCircle className="mr-2 h-4 w-4" /> Написать админу
           </Button>
         </div>
