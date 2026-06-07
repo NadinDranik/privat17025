@@ -28,13 +28,13 @@ export function useAuth(): AuthState {
     let mounted = true;
 
     const loadExtras = async (uid: string) => {
-      const [{ data: prof }, { data: roles }] = await Promise.all([
+      const [{ data: prof }, { data: adminFlag }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", uid),
+        supabase.rpc("has_role", { _user_id: uid, _role: "admin" }),
       ]);
       if (!mounted) return;
       setProfile(prof as AppProfile | null);
-      setIsAdmin((roles ?? []).some((r) => r.role === "admin"));
+      setIsAdmin(adminFlag === true);
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {

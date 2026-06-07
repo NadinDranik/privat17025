@@ -13,10 +13,21 @@ import { Trash2 } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Админ-панель" }] }),
   beforeLoad: async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) throw redirect({ to: "/auth" });
-    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-    if (!(roles ?? []).some((r) => r.role === "admin")) throw redirect({ to: "/chats" });
+    // Сначала пробуем session (быстрее и стабильнее на мобильных),
+    // затем getUser как фолбэк.
+    const { data: s } = await supabase.auth.getSession();
+    const uid = s.session?.user?.id
+      ?? (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) throw redirect({ to: "/auth" });
+
+    // SECURITY DEFINER — не зависит от RLS на user_roles, надёжнее на мобильных.
+    const { data: isAdmin, error } = await supabase.rpc("has_role", {
+      _user_id: uid,
+      _role: "admin",
+    });
+    // При сетевой ошибке не выкидываем из админки — пусть компонент перепроверит.
+    if (error) return;
+    if (!isAdmin) throw redirect({ to: "/chats" });
   },
   component: Admin,
 });
