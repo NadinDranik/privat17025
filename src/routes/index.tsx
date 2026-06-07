@@ -37,7 +37,7 @@ function Landing() {
               </Button>
             </Link>
             <Link to="/subscribe">
-              <Button size="sm">Подписаться</Button>
+              <Button size="sm" className="bg-orange-500">Подписаться</Button>
             </Link>
           </nav>
         </div>
